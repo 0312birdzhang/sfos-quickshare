@@ -10,6 +10,7 @@ import subprocess
 import threading
 import time
 from zeroconf import Zeroconf, ServiceInfo, ServiceBrowser, ServiceListener, IPVersion
+from .i18n import tr as _
 
 TYPE = '_FC9F5ED42C8A._tcp.local.'
 
@@ -30,10 +31,10 @@ def endpoint_name(data):
         raise ValueError('Truncated endpoint')
     # Visibility/hidden is not a filter: stock peers enforce it during negotiation.
     if raw[0] & 16:
-        return 'Quick Share device'
+        return _('Quick Share device')
     if len(raw) < 18 or len(raw) < 18 + raw[17]:
         raise ValueError('Truncated device name')
-    return raw[18:18 + raw[17]].decode('utf-8', 'replace') or 'Quick Share device'
+    return raw[18:18 + raw[17]].decode('utf-8', 'replace') or _('Quick Share device')
 
 
 def address(interface='auto'):

@@ -1,4 +1,5 @@
 import QtQuick 2.6
+import "QuickShareI18n.js" as I18n
 import Sailfish.Silica 1.0
 import Sailfish.TransferEngine 1.0
 
@@ -14,11 +15,11 @@ Column {
         x: Theme.horizontalPageMargin
         width: parent.width - 2*x
         wrapMode: Text.Wrap
-        text: api.status.ready ? "选择接收设备（同一局域网，开启 Quick Share 接收）" : "Quick Share 未就绪，请检查网络和运行时。"
+        text: api.status.ready ? I18n.tr("Choose a device on the same local network with Quick Share receiving enabled.") : I18n.tr("Quick Share is not ready. Check the network and protocol runtime.")
     }
     Button {
         anchors.horizontalCenter: parent.horizontalCenter
-        text: api.status.discovering ? "正在搜索…" : "搜索设备"
+        text: api.status.discovering ? I18n.tr("Searching…") : I18n.tr("Search for devices")
         enabled: api.status.ready && !api.status.discovering
         onClicked: api.invoke("Discover", [])
     }
@@ -26,7 +27,7 @@ Column {
         model: api.status.peers
         delegate: BackgroundItem {
             width: root.width
-            Label { x: Theme.horizontalPageMargin; anchors.verticalCenter: parent.verticalCenter; text: modelData.name }
+            Label { x: Theme.horizontalPageMargin; width: parent.width - 2*x; anchors.verticalCenter: parent.verticalCenter; text: modelData.name; elide: Text.ElideRight }
             onClicked: {
                 transfer.userData = {peer: modelData.id}
                 transfer.start()

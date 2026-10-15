@@ -1,5 +1,7 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 SUBDIRS = quickshare-sharing quickshare-transfer
+SUBDIRS += i18n-check
+i18n-check.file = tools/i18n-check/check.pro
 quickshare-sharing.file = plugins/quickshare-sharing/sharing.pro
 quickshare-transfer.file = plugins/quickshare-transfer/transfer.pro

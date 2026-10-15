@@ -1,7 +1,7 @@
 Name: sfos-quickshare
 %global __requires_exclude_from ^%{_libdir}/sfos-quickshare/runtime/.*$
 %global __provides_exclude_from ^(%{_libdir}/sfos-quickshare/runtime/.*|%{_libdir}/nemo-transferengine/plugins/.*)$
-Version: 0.1.0
+Version: 0.1.1
 Release: 1
 Summary: Quick Share local-network file sharing for Sailfish OS
 License: GPLv3+ and Apache-2.0 and GPLv2 with exceptions
@@ -10,6 +10,8 @@ URL: https://github.com/kyujin-cho/LibreDrop
 Source0: %{name}-%{version}.tar.gz
 BuildRequires: pkgconfig(Qt5Core)
 BuildRequires: pkgconfig(Qt5DBus)
+BuildRequires: pkgconfig(Qt5Gui)
+BuildRequires: pkgconfig(Qt5Qml)
 BuildRequires: pkgconfig(nemotransferengine-qt5)
 Requires: python3-base >= 3.8
 Requires: glibc >= 2.34
@@ -32,6 +34,7 @@ and iPhone AirDrop interoperability are not included in this test release.
 
 %build
 chmod 644 LICENSE
+python3 tools/build-translations.py
 %qmake5
 %make_build
 
@@ -43,13 +46,16 @@ install -Dm644 data/sfos-quickshare.service %{buildroot}%{_userunitdir}/sfos-qui
 install -Dm644 data/quickshare.json %{buildroot}%{_datadir}/jolla-settings/entries/quickshare.json
 install -Dm644 qml/QuickShareSettings.qml %{buildroot}%{_datadir}/jolla-settings/pages/quickshare/QuickShareSettings.qml
 install -m644 qml/QuickShareBus.qml %{buildroot}%{_datadir}/jolla-settings/pages/quickshare/
+install -m644 qml/QuickShareI18n.js %{buildroot}%{_datadir}/jolla-settings/pages/quickshare/
 install -Dm644 qml/QuickShareShare.qml %{buildroot}%{_datadir}/nemo-transferengine/plugins/sharing/QuickShareShare.qml
 install -m644 qml/QuickShareBus.qml %{buildroot}%{_datadir}/nemo-transferengine/plugins/sharing/
+install -m644 qml/QuickShareI18n.js %{buildroot}%{_datadir}/nemo-transferengine/plugins/sharing/
 mkdir -p %{buildroot}%{_datadir}/sfos-quickshare/quickshare
 mkdir -p %{buildroot}%{_libdir}/sfos-quickshare/runtime
 cp -r vendor %{buildroot}%{_datadir}/sfos-quickshare/
 install -m644 quickshare/*.py %{buildroot}%{_datadir}/sfos-quickshare/quickshare/
 cp -r quickshare/lib quickshare/licenses %{buildroot}%{_datadir}/sfos-quickshare/quickshare/
+cp -r quickshare/locales %{buildroot}%{_datadir}/sfos-quickshare/quickshare/
 cp -a quickshare/runtime-image/*/* %{buildroot}%{_libdir}/sfos-quickshare/runtime/
 install -m644 quickshare/runtime.lock.json quickshare/artifacts.lock.json quickshare/jvm/UPSTREAM.json %{buildroot}%{_datadir}/sfos-quickshare/quickshare/
 find %{buildroot}%{_datadir}/sfos-quickshare -type f -exec chmod 644 {} +
@@ -72,7 +78,10 @@ chmod 755 %{buildroot}%{_libdir}/sfos-quickshare/runtime/lib/jspawnhelper %{buil
 %{_datadir}/jolla-settings/pages/quickshare
 %{_datadir}/nemo-transferengine/plugins/sharing/QuickShareShare.qml
 %{_datadir}/nemo-transferengine/plugins/sharing/QuickShareBus.qml
+%{_datadir}/nemo-transferengine/plugins/sharing/QuickShareI18n.js
 
 %changelog
+* Thu Oct 15 2026 Sailfish sharing contributors - 0.1.1-1
+- Localize hosted QML pages, notifications and common errors in six languages.
 * Thu Oct 15 2026 Sailfish sharing contributors - 0.1.0-1
 - Split Quick Share into an independent LAN testing package.

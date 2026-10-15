@@ -1,4 +1,5 @@
 import QtQuick 2.6
+import "QuickShareI18n.js" as I18n
 import Sailfish.Silica 1.0
 
 Page {
@@ -13,8 +14,8 @@ Page {
             spacing: Theme.paddingMedium
             PageHeader { title: "Quick Share" }
             TextSwitch {
-                text: "允许接收（10 分钟）"
-                description: "同一局域网内接收文件。核对双方 PIN 后确认；文件保存到 Downloads/QuickShare。"
+                text: I18n.tr("Allow receiving (10 minutes)")
+                description: I18n.tr("Receive files on the same local network. Confirm matching PINs. Files are saved in Downloads/QuickShare.")
                 checked: api.status.receiving
                 automaticCheck: false
                 enabled: api.status.ready
@@ -22,7 +23,7 @@ Page {
             }
             Label {
                 x: Theme.horizontalPageMargin; width: parent.width - 2*x; wrapMode: Text.Wrap
-                text: api.status.ready ? "局域网连接已就绪。此后端兼容 Quick Share 协议；iPhone AirDrop 支持尚未实现。" : "Quick Share 未就绪，请检查网络和协议运行时。"
+                text: api.status.ready ? I18n.tr("Local network ready. iPhone AirDrop is not supported yet.") : I18n.tr("Quick Share is not ready. Check the network and protocol runtime.")
             }
             Repeater {
                 model: api.status.pending
@@ -30,12 +31,14 @@ Page {
                     width: column.width
                     Label {
                         x: Theme.horizontalPageMargin; width: parent.width - 2*x; wrapMode: Text.Wrap
-                        text: modelData.sender + "\nPIN: " + modelData.pin + "\n" + modelData.files.join("\n")
+                        text: modelData.sender + "\n" + I18n.tr("PIN: %1", modelData.pin) + "\n" + modelData.files.join("\n")
                     }
-                    Row {
+                    Column {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        Button { text: "PIN 一致，接收"; onClicked: api.invoke("Approve", [modelData.id, true]) }
-                        Button { text: "拒绝"; onClicked: api.invoke("Approve", [modelData.id, false]) }
+                        width: parent.width - 2 * Theme.horizontalPageMargin
+                        spacing: Theme.paddingSmall
+                        Button { width: parent.width; text: I18n.tr("PINs match, receive"); onClicked: api.invoke("Approve", [modelData.id, true]) }
+                        Button { width: parent.width; text: I18n.tr("Reject"); onClicked: api.invoke("Approve", [modelData.id, false]) }
                     }
                 }
             }
@@ -46,14 +49,15 @@ Page {
                     visible: modelData.mode === "send"
                     Label {
                         x: Theme.horizontalPageMargin; width: parent.width - 2*x; wrapMode: Text.Wrap
-                        text: (modelData.pin ? "发送 PIN: " + modelData.pin + "\n" : "") +
-                              (modelData.state === "finished" ? "发送完成" : modelData.state === "failed" ? "发送失败：" + modelData.error :
-                               modelData.state === "canceled" ? "已取消" : modelData.state === "waiting" ? "请接收方核对 PIN 并确认" : "正在发送")
+                        text: (modelData.pin ? I18n.tr("Sending PIN: %1", modelData.pin) + "\n" : "") +
+                              (modelData.state === "finished" ? I18n.tr("Transfer complete") : modelData.state === "failed" ? I18n.tr("Transfer failed: %1", modelData.error) :
+                               modelData.state === "canceled" ? I18n.tr("Canceled") : modelData.state === "waiting" ? I18n.tr("Ask the recipient to verify the PIN and accept.") : I18n.tr("Sending…"))
                     }
                     ProgressBar { width: parent.width; value: modelData.progress || 0; maximumValue: 1 }
                     Button {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "取消发送"
+                        width: parent.width - 2 * Theme.horizontalPageMargin
+                        text: I18n.tr("Cancel transfer")
                         visible: modelData.state === "running" || modelData.state === "waiting"
                         onClicked: api.invoke("Cancel", [modelData.id])
                     }

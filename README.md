@@ -5,7 +5,9 @@ settings and Transfer Engine. Incoming transfers require explicit PIN confirmati
 
 The test RPM targets **aarch64**, requires **glibc >= 2.34**, and has been tested on
 SailfishOS 5.2 / Xiaomi Pad 5. Bluetooth discovery, Wi-Fi Direct, automatic hotspots
-and iPhone AirDrop interoperability are not implemented. The UI is mainly Chinese.
+and iPhone AirDrop interoperability are not implemented. Settings, sharing pages,
+notifications and common errors support English, Simplified Chinese, Traditional
+Chinese, German, French and Russian; other locales fall back to English.
 
 Open Settings → Connectivity → Quick Share to enable receiving for ten minutes.
 To send, select a file in the system share menu and choose Quick Share. Both devices
@@ -26,6 +28,7 @@ cd quickshare/jvm
 sh gradlew :bridge:installDist :bridge:test :core-protocol:test
 cd ../..
 python3 tools/prepare-quickshare.py
+python3 tools/build-translations.py
 python3 -m unittest discover -s tests -v
 ```
 
@@ -41,6 +44,17 @@ SDK_USER=pc tools/sailfish-wsl-build.sh /path/to/sfos-quickshare
 The helper stages sources in WSL and builds with mb2. SDK_USER, SDK_ROOT,
 SFOS_TARGET and other paths are configurable; see `--help`. RPMs go into `RPMS/`.
 Dependencies, runtime images, generated JARs and RPMs are not committed.
+
+## Translations
+
+Edit `quickshare/locales/*.json`, retaining every English key and its `%1`, `%2`
+placeholders. Run `python3 tools/build-translations.py` and commit the generated
+`qml/QuickShareI18n.js` alongside the catalogs. RPM builds regenerate this module.
+Both the Python service and the hosted QML pages use these shared catalogs; the
+pages synchronize their Qt locale with the session service. Reopen the settings
+or sharing page after changing the system language. Unknown protocol diagnostics
+remain verbatim beneath localized failure summaries. Device/file names are not
+translated. Node.js is optional for additional Python/JavaScript parity tests.
 
 ## Source layout
 

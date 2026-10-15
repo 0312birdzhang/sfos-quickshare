@@ -1,6 +1,6 @@
-# SailfishOS Quick Share 0.1.0 测试包
+# SailfishOS Quick Share 0.1.1 测试包
 
-文件：`sfos-quickshare-0.1.0-1.aarch64.rpm`。
+文件：`sfos-quickshare-0.1.1-1.aarch64.rpm`。
 这是独立 Quick Share LAN 测试包，包含所需协议核心和私有 Java 运行时。
 不用安装 AirDrop 包，也不用修改内核、Wi-Fi 驱动或系统 Java。
 
@@ -18,7 +18,7 @@
 
 ```sh
 devel-su
-pkcon install-local /home/defaultuser/Downloads/sfos-quickshare-0.1.0-1.aarch64.rpm
+pkcon install-local /home/defaultuser/Downloads/sfos-quickshare-0.1.1-1.aarch64.rpm
 exit
 systemctl --user daemon-reload
 ```
@@ -54,7 +54,9 @@ devel-su rpm -e sfos-airdrop
 - 使用局域网发现和传输；不包含蓝牙发现、Wi-Fi Direct 或自动建热点。
 - 不支持 iPhone 原生 AirDrop；iPhone 互通是另一个开发阶段。
 - 系统分享入口本版按单文件使用；协议核心支持批次接收。
-- 当前界面主要为中文。
+- 支持英文、简体中文、繁体中文、德语、法语和俄语，其他语言回退英文。
+- 跟随系统语言；切换后重新打开设置或分享页，通知语言随页面同步。
+- 底层协议的未知诊断保留原文，文件名和设备名不翻译。
 - Windows 官方 Quick Share → SailfishOS 曾由用户确认成功。
 - 原生 Android、Windows 反向发送仍需要测试者验证；受控 Linux 对端测试
   与官方客户端互通测试应分别报告，不能相互替代。

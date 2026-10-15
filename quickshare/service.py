@@ -14,6 +14,7 @@ import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
+from .i18n import tr as _, error_text, language
 
 NAME = 'org.sailfishos.QuickShare'
 PATH = '/org/sailfishos/QuickShare'
@@ -41,7 +42,7 @@ class Service(dbus.service.Object):
             address(self.interface)
             java_command()
         except Exception as error:
-            raise dbus.exceptions.DBusException(str(error), name=NAME + '.LinkUnavailable')
+            raise dbus.exceptions.DBusException(error_text(error), name=NAME + '.LinkUnavailable')
 
     def launch(self, mode, *args):
         ident = uuid.uuid4().hex
@@ -62,7 +63,7 @@ class Service(dbus.service.Object):
                 self.peers = {p['id']: p for p in data.pop('peers')}
                 self.peers_at = time.monotonic()
             if data.get('pin') and data['pin'] != job.get('pin'):
-                self.notify('Quick Share 发送 PIN', data['pin'] + '：请接收方核对后确认')
+                self.notify(_('Quick Share sending PIN'), _('%1: ask the recipient to verify this PIN and accept.', data['pin']))
             job.update(data)
             if data.get('error'): self.error = data['error']
             return False
@@ -106,6 +107,10 @@ class Service(dbus.service.Object):
         except dbus.DBusException:
             pass
 
+    @dbus.service.method(NAME, in_signature='s', out_signature='')
+    def SetLanguage(self, locale):
+        os.environ['SFOS_QUICKSHARE_LANGUAGE'] = language(str(locale))
+
     @dbus.service.method(NAME, in_signature='', out_signature='s')
     def GetStatus(self):
         ready = True
@@ -114,7 +119,7 @@ class Service(dbus.service.Object):
         return json.dumps({'ready': ready, 'interface': self.interface,
                            'receiving': self.receiver is not None, 'discovering': self.discovering,
                            'peers': list(self.peers.values()), 'pending': list(self.pending.values()),
-                           'jobs': [dict(value[0], id=key) for key, value in self.jobs.items()], 'error': self.error})
+                           'jobs': [dict(value[0], id=key, error=error_text(value[0].get('error', ''))) for key, value in self.jobs.items()], 'error': error_text(self.error)})
 
     @dbus.service.method(NAME, in_signature='', out_signature='')
     def Discover(self):
@@ -132,15 +137,15 @@ class Service(dbus.service.Object):
     def Send(self, source, peer):
         self.check()
         if peer not in self.peers or time.monotonic() - self.peers_at > 120:
-            raise ValueError('Peer has expired; discover again')
+            raise ValueError(_('Peer has expired; discover again'))
         if sum(proc.poll() is None for _, proc in self.jobs.values()) >= 5:
-            raise ValueError('Too many active transfers')
-        if Path(source).is_symlink() or not Path(source).is_file(): raise ValueError('File does not exist')
+            raise ValueError(_('Too many active transfers'))
+        if Path(source).is_symlink() or not Path(source).is_file(): raise ValueError(_('File does not exist'))
         return self.launch('send', json.dumps(self.peers[peer]), str(source))
 
     @dbus.service.method(NAME, in_signature='s', out_signature='s')
     def GetJob(self, ident):
-        return json.dumps(self.jobs[ident][0])
+        return json.dumps(dict(self.jobs[ident][0], error=error_text(self.jobs[ident][0].get('error', ''))))
 
     @dbus.service.method(NAME, in_signature='s', out_signature='')
     def Cancel(self, ident):
@@ -183,7 +188,7 @@ class Service(dbus.service.Object):
         ident = uuid.uuid4().hex
         self.pending[ident] = {'id': ident, 'wireId': data.get('id'), 'sender': data['sender'], 'files': data['files'], 'pin': str(data.get('pin', '')), 'total': data.get('total', 0)}
         self._replies[ident] = reply
-        self.notify('Quick Share 接收请求', data['sender'] + '：确认 PIN ' + data['pin'] + '，打开设置 → Quick Share')
+        self.notify(_('Quick Share incoming request'), _('%1: verify PIN %2 in Settings → Quick Share.', data['sender'], data['pin']))
         def expire():
             if ident in self.pending: self.Approve(ident, False)
             return False
@@ -199,7 +204,7 @@ class Service(dbus.service.Object):
     def Received(self, destination, count):
         from . import history
         files = history.received_files(destination, Path.home() / 'Downloads/QuickShare', count)
-        self.notify('Quick Share 接收完成', files[0].name if len(files) == 1 else str(count) + ' 个文件已保存到 ' + destination)
+        self.notify(_('Quick Share receive complete'), files[0].name if len(files) == 1 else _('Saved files: %1. Folder: %2', count, destination))
         try:
             iface = dbus.Interface(self.bus.get_object('org.nemo.transferengine', '/org/nemo/transferengine'), 'org.nemo.transferengine')
             history.register(iface, destination, Path.home() / 'Downloads/QuickShare', 'Quick Share', count,
