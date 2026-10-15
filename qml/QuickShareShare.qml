@@ -6,11 +6,17 @@ import Sailfish.TransferEngine 1.0
 Column {
     id: root
     property var shareAction
+    property bool searchStarted: false
     width: parent.width
     spacing: Theme.paddingMedium
     SailfishTransfer { id: transfer }
     QuickShareBus { id: api }
     Component.onCompleted: transfer.loadConfiguration(shareAction.toConfiguration())
+    Timer {
+        interval: 5000; repeat: true
+        running: root.searchStarted && root.visible
+        onTriggered: if (api.status.ready && !api.status.discovering) api.invoke("Discover", [])
+    }
     Label {
         x: Theme.horizontalPageMargin
         width: parent.width - 2*x
@@ -21,7 +27,7 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
         text: api.status.discovering ? I18n.tr("Searching…") : I18n.tr("Search for devices")
         enabled: api.status.ready && !api.status.discovering
-        onClicked: api.invoke("Discover", [])
+        onClicked: { root.searchStarted = true; api.invoke("Discover", []) }
     }
     Repeater {
         model: api.status.peers

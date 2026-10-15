@@ -36,5 +36,6 @@
   "Files saved; notification failed: %1": "Files saved; notification failed: %1",
   "Quick Share device": "Quick Share device",
   "Unknown operation": "Unknown operation",
-  "Quick Share Java runtime is missing %1": "Quick Share Java runtime is missing %1"
+  "Quick Share Java runtime is missing %1": "Quick Share Java runtime is missing %1",
+  "Allow receiving (%1)": "Allow receiving (%1)"
 }

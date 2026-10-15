@@ -24,7 +24,7 @@ process.stdout.write(JSON.stringify(input.map(c=>ctx.translate(c[1],['A %2','B']
 
     def test_catalog_completeness_and_placeholders(self):
         base = catalog('en')
-        self.assertEqual(len(base), 38)
+        self.assertEqual(len(base), 39)
         for locale in ('en', 'zh_CN', 'zh_TW', 'de', 'fr', 'ru'):
             entries = catalog(locale)
             self.assertEqual(entries.keys(), base.keys(), locale)

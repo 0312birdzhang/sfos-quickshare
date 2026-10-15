@@ -78,7 +78,7 @@ def advertisement(ip, port, endpoint, instance=None, wifi_frequency=None):
                        port=port, properties=props, server='sfos-quickshare-' + ident + '.local.')
 
 
-def discover(interface, emit, duration=8):
+def discover(interface, emit, duration=60):
     ip = address(interface)
     local_ips = {ip}
     zc = Zeroconf(interfaces=[ip], ip_version=IPVersion.V4Only)

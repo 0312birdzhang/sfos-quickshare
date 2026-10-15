@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 import collections
 import json
+import math
 import os
 from pathlib import Path
 import socket
@@ -18,6 +19,7 @@ from .i18n import tr as _, error_text, language
 
 NAME = 'org.sailfishos.QuickShare'
 PATH = '/org/sailfishos/QuickShare'
+PEER_MAX_AGE = 15
 
 
 class Service(dbus.service.Object):
@@ -31,6 +33,7 @@ class Service(dbus.service.Object):
         self.peers_at = 0.0
         self.pending = {}
         self.receiver = None
+        self.receiver_deadline = 0.0
         self.error = ''
         self.discovering = False
         self._replies = {}
@@ -89,6 +92,7 @@ class Service(dbus.service.Object):
             if mode == 'receive' and self.receiver == ident:
                 for pending in list(self.pending): self.Approve(pending, False)
                 self.receiver = None
+                self.receiver_deadline = 0.0
                 self.error = job.get('error', '')
             # Keep bounded completed history without removing active jobs.
             for key in list(self.jobs):
@@ -113,11 +117,14 @@ class Service(dbus.service.Object):
 
     @dbus.service.method(NAME, in_signature='', out_signature='s')
     def GetStatus(self):
+        self.expire_peers()
+        remaining = self.receiving_seconds()
         ready = True
         try: self.check()
         except dbus.DBusException: ready = False
         return json.dumps({'ready': ready, 'interface': self.interface,
                            'receiving': self.receiver is not None, 'discovering': self.discovering,
+                           'receivingSeconds': remaining,
                            'peers': list(self.peers.values()), 'pending': list(self.pending.values()),
                            'jobs': [dict(value[0], id=key, error=error_text(value[0].get('error', ''))) for key, value in self.jobs.items()], 'error': error_text(self.error)})
 
@@ -136,12 +143,18 @@ class Service(dbus.service.Object):
     @dbus.service.method(NAME, in_signature='ss', out_signature='s')
     def Send(self, source, peer):
         self.check()
-        if peer not in self.peers or time.monotonic() - self.peers_at > 120:
+        self.expire_peers()
+        if peer not in self.peers:
             raise ValueError(_('Peer has expired; discover again'))
         if sum(proc.poll() is None for _, proc in self.jobs.values()) >= 5:
             raise ValueError(_('Too many active transfers'))
         if Path(source).is_symlink() or not Path(source).is_file(): raise ValueError(_('File does not exist'))
         return self.launch('send', json.dumps(self.peers[peer]), str(source))
+
+    def expire_peers(self):
+        # Discovery snapshots are leases, not a permanent device directory.
+        if time.monotonic() - self.peers_at >= PEER_MAX_AGE:
+            self.peers.clear()
 
     @dbus.service.method(NAME, in_signature='s', out_signature='s')
     def GetJob(self, ident):
@@ -163,18 +176,28 @@ class Service(dbus.service.Object):
         if not enabled:
             if self.receiver: self.Cancel(self.receiver)
             self.receiver = None
+            self.receiver_deadline = 0.0
             for ident in list(self.pending): self.Approve(ident, False)
             return
         self.check()
         if not self.receiver:
             self.error = ''
             self.receiver = self.launch('receive')
+            self.receiver_deadline = time.monotonic() + 600
             # Everyone visibility expires, even when the settings page closes.
             receiver = self.receiver
             def expire():
                 if self.receiver == receiver: self.SetReceiving(False)
                 return False
             GLib.timeout_add_seconds(600, expire)
+
+    def receiving_seconds(self):
+        if not self.receiver:
+            return 0
+        remaining = max(0, math.ceil(self.receiver_deadline - time.monotonic()))
+        if not remaining:
+            self.SetReceiving(False)
+        return remaining
 
     @dbus.service.method(NAME, in_signature='s', out_signature='b', async_callbacks=('reply', 'failure'))
     def Request(self, request, reply, failure):

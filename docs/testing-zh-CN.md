@@ -1,6 +1,6 @@
-# SailfishOS Quick Share 0.1.1 测试包
+# SailfishOS Quick Share 0.1.4 测试包
 
-文件：`sfos-quickshare-0.1.1-1.aarch64.rpm`。
+文件：`sfos-quickshare-0.1.4-1.aarch64.rpm`。
 这是独立 Quick Share LAN 测试包，包含所需协议核心和私有 Java 运行时。
 不用安装 AirDrop 包，也不用修改内核、Wi-Fi 驱动或系统 Java。
 
@@ -18,10 +18,13 @@
 
 ```sh
 devel-su
-pkcon install-local /home/defaultuser/Downloads/sfos-quickshare-0.1.1-1.aarch64.rpm
+pkcon install-local /home/defaultuser/Downloads/sfos-quickshare-0.1.4-1.aarch64.rpm
 exit
 systemctl --user daemon-reload
+systemctl --user restart sfos-quickshare.service
 ```
+
+升级前先等待当前传输完成；升级后重启服务使新代码生效。
 
 以前安装过混合包 `sfos-airdrop-0.3.0` 的用户，先停止服务并卸载旧包，
 再安装独立包（两包存在同名插件，不能共存）：
@@ -38,7 +41,7 @@ devel-su rpm -e sfos-airdrop
 ## 接收文件
 
 1. 打开“设置 → 连接 → Quick Share”（英文系统为 Connectivity）。
-2. 开启“允许接收（10 分钟）”，保持设置页打开。
+2. 开启“允许接收（10 分钟）”，开关显示剩余分秒；关闭再打开页面不会重置计时。
 3. 在另一台设备的 Quick Share 中选择这台 SailfishOS 设备。
 4. 核对双方 PIN，在 SailfishOS 上确认接收。
 5. 文件保存到 `Downloads/QuickShare/` 下的批次目录，保留文件名和后缀。
@@ -47,7 +50,12 @@ devel-su rpm -e sfos-airdrop
 
 1. 在另一台设备打开 Quick Share 接收/可见模式。
 2. 在 SailfishOS 文件管理器或图库选择一个文件，打开系统分享菜单。
-3. 选择 Quick Share，等待发现并选择对端，核对 PIN 后由对端确认接收。
+3. 选择 Quick Share，点击搜索并选择对端，核对 PIN 后由对端确认接收。
+   搜索后在分享面板可见期间持续刷新；无新搜索结果超过 15 秒时清空旧列表。
+   正常退出接收的对端通过 mDNS 离线通知移除，突然断网可能需要等待协议缓存过期。
+
+设备名优先使用系统蓝牙名称，读取不到时使用 hostname；收发双方显示一致。
+修改名称后关闭再开启 Quick Share 接收，使新名称生效。
 
 ## 测试范围和限制
 

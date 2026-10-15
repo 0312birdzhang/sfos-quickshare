@@ -36,5 +36,6 @@
   "Files saved; notification failed: %1": "Файлы сохранены; ошибка уведомления: %1",
   "Quick Share device": "Устройство Quick Share",
   "Unknown operation": "Неизвестная операция",
-  "Quick Share Java runtime is missing %1": "В среде Java Quick Share отсутствует %1"
+  "Quick Share Java runtime is missing %1": "В среде Java Quick Share отсутствует %1",
+  "Allow receiving (%1)": "Разрешить приём (%1)"
 }

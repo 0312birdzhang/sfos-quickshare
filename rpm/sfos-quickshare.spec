@@ -1,7 +1,7 @@
 Name: sfos-quickshare
 %global __requires_exclude_from ^%{_libdir}/sfos-quickshare/runtime/.*$
 %global __provides_exclude_from ^(%{_libdir}/sfos-quickshare/runtime/.*|%{_libdir}/nemo-transferengine/plugins/.*)$
-Version: 0.1.1
+Version: 0.1.4
 Release: 1
 Summary: Quick Share local-network file sharing for Sailfish OS
 License: GPLv3+ and Apache-2.0 and GPLv2 with exceptions
@@ -81,6 +81,12 @@ chmod 755 %{buildroot}%{_libdir}/sfos-quickshare/runtime/lib/jspawnhelper %{buil
 %{_datadir}/nemo-transferengine/plugins/sharing/QuickShareI18n.js
 
 %changelog
+* Thu Oct 15 2026 Sailfish sharing contributors - 0.1.4-1
+- Display the live remaining receiving time from the session service.
+* Thu Oct 15 2026 Sailfish sharing contributors - 0.1.3-1
+- Use the Bluetooth device name, with hostname fallback, for send and receive.
+* Thu Oct 15 2026 Sailfish sharing contributors - 0.1.2-1
+- Refresh discovery while the sharing panel is open and expire stale peer lists.
 * Thu Oct 15 2026 Sailfish sharing contributors - 0.1.1-1
 - Localize hosted QML pages, notifications and common errors in six languages.
 * Thu Oct 15 2026 Sailfish sharing contributors - 0.1.0-1

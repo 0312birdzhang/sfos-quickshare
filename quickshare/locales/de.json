@@ -36,5 +36,6 @@
   "Files saved; notification failed: %1": "Dateien gespeichert; Benachrichtigung fehlgeschlagen: %1",
   "Quick Share device": "Quick Share-Gerät",
   "Unknown operation": "Unbekannter Vorgang",
-  "Quick Share Java runtime is missing %1": "In der Quick Share Java-Laufzeit fehlt %1"
+  "Quick Share Java runtime is missing %1": "In der Quick Share Java-Laufzeit fehlt %1",
+  "Allow receiving (%1)": "Empfang erlauben (%1)"
 }

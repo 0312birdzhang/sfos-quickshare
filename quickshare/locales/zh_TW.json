@@ -36,5 +36,6 @@
   "Files saved; notification failed: %1": "檔案已儲存，但傳送通知失敗：%1",
   "Quick Share device": "Quick Share 裝置",
   "Unknown operation": "未知操作",
-  "Quick Share Java runtime is missing %1": "Quick Share Java 執行環境缺少 %1"
+  "Quick Share Java runtime is missing %1": "Quick Share Java 執行環境缺少 %1",
+  "Allow receiving (%1)": "允許接收（%1）"
 }

@@ -9,6 +9,7 @@ import sys
 import threading
 from zeroconf import Zeroconf, IPVersion
 from . import network
+from .identity import device_name
 
 ROOT = Path(__file__).resolve().parent
 
@@ -108,11 +109,11 @@ def main():
     elif mode == 'send':
         peer = json.loads(sys.argv[3])
         bridge({'command': 'send', 'host': peer['address'], 'port': peer['port'],
-                'files': [sys.argv[4]], 'name': os.environ.get('SFOS_QUICKSHARE_NAME', 'SailfishOS')}, interface)
+                'files': [sys.argv[4]], 'name': device_name()}, interface)
     elif mode == 'receive':
         bridge({'command': 'receive', 'bind': network.address(interface),
                 'destination': str(Path.home() / 'Downloads/QuickShare'),
-                'name': os.environ.get('SFOS_QUICKSHARE_NAME', 'SailfishOS')}, interface)
+                'name': device_name()}, interface)
     else:
         raise ValueError('Unknown operation')
 

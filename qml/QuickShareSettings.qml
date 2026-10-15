@@ -14,7 +14,9 @@ Page {
             spacing: Theme.paddingMedium
             PageHeader { title: "Quick Share" }
             TextSwitch {
-                text: I18n.tr("Allow receiving (10 minutes)")
+                text: api.status.receiving ? I18n.tr("Allow receiving (%1)",
+                    Math.floor((api.status.receivingSeconds || 0) / 60) + ":" +
+                    ("0" + (api.status.receivingSeconds || 0) % 60).slice(-2)) : I18n.tr("Allow receiving (10 minutes)")
                 description: I18n.tr("Receive files on the same local network. Confirm matching PINs. Files are saved in Downloads/QuickShare.")
                 checked: api.status.receiving
                 automaticCheck: false
