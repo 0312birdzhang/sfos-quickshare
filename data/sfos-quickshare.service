@@ -1,0 +1,11 @@
+[Unit]
+Description=Experimental Sailfish QuickShare session service
+
+[Service]
+Type=dbus
+BusName=org.sailfishos.QuickShare
+ExecStart=/usr/bin/sfos-quickshared
+Environment=PYTHONPATH=/usr/share/sfos-quickshare:/usr/share/sfos-quickshare/vendor
+UMask=0077
+Restart=on-failure
+KillMode=control-group

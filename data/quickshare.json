@@ -1,0 +1,14 @@
+{
+  "entries": [
+    {
+      "path": "system_settings/connectivity/quickshare",
+      "type": "page",
+      "title": "Quick Share",
+      "order": 651,
+      "icon": "image://theme/icon-m-share",
+      "params": {
+        "source": "/usr/share/jolla-settings/pages/quickshare/QuickShareSettings.qml"
+      }
+    }
+  ]
+}

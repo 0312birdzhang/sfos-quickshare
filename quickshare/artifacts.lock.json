@@ -1,0 +1,13 @@
+{
+  "jars": {
+    "annotations-23.0.0.jar": "7b0f19724082cbfcbc66e5abea2b9bc92cf08a1ea11e191933ed43801eb3cd05",
+    "bridge.jar": "ea7bb2490d90b50eee14357300229b91e4303e927679e91a5dbb957f2cd515bc",
+    "core-protocol.jar": "60819843edb3e73ca15d30ae269caea721dc3ad99695fc4a8d98313cf402698e",
+    "error_prone_annotations-2.27.0.jar": "24c923372c58e35d0b9f16a028929bb9aedc77521867c274f2bd0735df5ba1f5",
+    "gson-2.11.0.jar": "57928d6e5a6edeb2abd3770a8f95ba44dce45f3b23b7a9dc2b309c581552a78b",
+    "kotlin-stdlib-2.1.0.jar": "d6f91b7b0f306cca299fec74fb7c34e4874d6f5ec5b925a0b4de21901e119c3f",
+    "kotlinx-coroutines-core-jvm-1.9.0.jar": "ad89c2892235e670f222d819cb3d81188143cb19a05b59df9889ae4269f5c70a",
+    "protobuf-javalite-4.28.3.jar": "900f12e5c96540cbb5c6bc7bb5d4cbd0d4f0a30fb23d7300244e93943a16f838"
+  },
+  "runtime_sha256": "b8efcd5acc9109fe8d35bed132499643048a257b4f6042906ece37d03c839d77"
+}

@@ -1,0 +1,10 @@
+{
+  "project": "Bada",
+  "repository": "https://github.com/kyujin-cho/LibreDrop",
+  "revision": "3232b5eb67a53c8a9b997b3641d41c36913b7cc8",
+  "modules": [
+    "core-protocol",
+    "core-protocol-test"
+  ],
+  "license": "Apache-2.0; retain per-file notices"
+}

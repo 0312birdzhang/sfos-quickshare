@@ -1,0 +1,10 @@
+TEMPLATE = lib
+TARGET = quicksharetransferplugin
+CONFIG += plugin link_pkgconfig c++11
+QT += core dbus
+QT -= gui
+PKGCONFIG += nemotransferengine-qt5
+HEADERS += plugin.h
+SOURCES += plugin.cpp
+target.path = $$[QT_INSTALL_LIBS]/nemo-transferengine/plugins/transfer
+INSTALLS += target

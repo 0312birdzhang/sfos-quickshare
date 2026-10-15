@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.sailfishos.QuickShare
+Exec=/usr/bin/sfos-quickshared
+SystemdService=sfos-quickshare.service
