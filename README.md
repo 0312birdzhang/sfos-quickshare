@@ -3,7 +3,7 @@
 Standalone Quick Share **local-network** file sharing through SailfishOS system
 settings and Transfer Engine. Incoming transfers require explicit PIN confirmation.
 
-The test RPM targets **aarch64**, requires **glibc >= 2.34**, and has been tested on
+The test RPMs target **aarch64**, require **glibc >= 2.34**, and have been tested on
 SailfishOS 5.2 / Xiaomi Pad 5. Bluetooth discovery, Wi-Fi Direct, automatic hotspots
 and iPhone AirDrop interoperability are not implemented. Settings, sharing pages,
 notifications and common errors support English, Simplified Chinese, Traditional
@@ -12,6 +12,18 @@ Chinese, German, French and Russian; other locales fall back to English.
 Open Settings → Connectivity → Quick Share to enable receiving for ten minutes.
 To send, select a file in the system share menu and choose Quick Share. Both devices
 must be on a mutually reachable LAN. Files are saved under Downloads/QuickShare.
+Finished, failed and canceled sends disappear from settings after one minute;
+the corresponding system upload records are removed after about one minute.
+Active transfers and received-file history are retained.
+
+Install both `sfos-quickshare` (service, UI, native plugins and translations) and
+`sfos-quickshare-runtime` (pinned Python dependencies, protocol JARs and private JRE).
+Runtime 1.0.0 is versioned independently; ordinary application updates reuse it.
+Upgrade an old all-in-one package and install the runtime in the same transaction.
+AirDrop is optional and separate. Its old mixed 0.3.0 RPM must first be upgraded
+to the AirDrop-only 0.4.0 package to avoid duplicate Quick Share files.
+The [compatibility packaging patch](docs/compatibility/README.md) preserves the
+AirDrop-only build changes for users of that old source tree.
 
 See [installation and testing instructions](docs/testing-zh-CN.md).
 
@@ -44,6 +56,9 @@ SDK_USER=pc tools/sailfish-wsl-build.sh /path/to/sfos-quickshare
 The helper stages sources in WSL and builds with mb2. SDK_USER, SDK_ROOT,
 SFOS_TARGET and other paths are configurable; see `--help`. RPMs go into `RPMS/`.
 Dependencies, runtime images, generated JARs and RPMs are not committed.
+The spec produces both RPMs. Increase the runtime version/release whenever its
+JARs (including the JSON bridge), Python vendor tree, JRE or manifests change;
+otherwise keep its version unchanged across application releases.
 
 ## Translations
 

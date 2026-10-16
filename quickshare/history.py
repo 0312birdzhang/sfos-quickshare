@@ -5,6 +5,21 @@ from pathlib import Path
 from urllib.parse import unquote
 
 
+def expire_sent(api, deadlines, now):
+    """Remove only terminal Quick Share uploads, never downloads or active jobs."""
+    eligible = {int(row[0]) for row in api.transfers()
+                if len(row) >= 6 and int(row[1]) == 1 and
+                int(row[2]) in (3, 4, 5) and str(row[5]) == 'QuickShare'}
+    for ident in list(deadlines):
+        if ident not in eligible:
+            deadlines.pop(ident)
+    for ident in eligible:
+        deadline = deadlines.setdefault(ident, now + 60)
+        if now >= deadline:
+            api.clearTransfer(ident)
+            deadlines.pop(ident)
+
+
 def received_files(destination, allowed_root, count):
     original = Path(destination)
     if original.is_symlink(): raise ValueError('Received batch cannot be a symlink')

@@ -37,6 +37,11 @@ class Service(dbus.service.Object):
         self.error = ''
         self.discovering = False
         self._replies = {}
+        self.sent_history_deadlines = {}
+        self.history_cleanup_scheduled = True
+        self.bus.add_signal_receiver(self.transfer_status_changed, signal_name='statusChanged',
+            dbus_interface='org.nemo.transferengine', bus_name='org.nemo.transferengine')
+        GLib.timeout_add_seconds(5, self.clean_sent_history)
 
     def check(self):
         from .network import address
@@ -68,7 +73,7 @@ class Service(dbus.service.Object):
             if data.get('pin') and data['pin'] != job.get('pin'):
                 self.notify(_('Quick Share sending PIN'), _('%1: ask the recipient to verify this PIN and accept.', data['pin']))
             job.update(data)
-            if data.get('error'): self.error = data['error']
+            if data.get('error') and mode != 'send': self.error = data['error']
             return False
         def drain():
             errors = []
@@ -94,6 +99,9 @@ class Service(dbus.service.Object):
                 self.receiver = None
                 self.receiver_deadline = 0.0
                 self.error = job.get('error', '')
+            if mode == 'send':
+                job['finishedAt'] = time.monotonic()
+                GLib.timeout_add_seconds(60, self.expire_sent_jobs)
             # Keep bounded completed history without removing active jobs.
             for key in list(self.jobs):
                 if len(self.jobs) <= 64: break
@@ -117,6 +125,7 @@ class Service(dbus.service.Object):
 
     @dbus.service.method(NAME, in_signature='', out_signature='s')
     def GetStatus(self):
+        self.expire_sent_jobs()
         self.expire_peers()
         remaining = self.receiving_seconds()
         ready = True
@@ -158,7 +167,32 @@ class Service(dbus.service.Object):
 
     @dbus.service.method(NAME, in_signature='s', out_signature='s')
     def GetJob(self, ident):
+        self.expire_sent_jobs()
         return json.dumps(dict(self.jobs[ident][0], error=error_text(self.jobs[ident][0].get('error', ''))))
+
+    def expire_sent_jobs(self):
+        now = time.monotonic()
+        for ident, (job, proc) in list(self.jobs.items()):
+            if (job['mode'] == 'send' and 'finishedAt' in job and
+                    now - job['finishedAt'] >= 60 and proc.poll() is not None):
+                self.jobs.pop(ident)
+        return False
+
+    def clean_sent_history(self):
+        from .history import expire_sent
+        try:
+            api = dbus.Interface(self.bus.get_object('org.nemo.transferengine', '/org/nemo/transferengine'), 'org.nemo.transferengine')
+            expire_sent(api, self.sent_history_deadlines, time.monotonic())
+        except dbus.DBusException:
+            self.history_cleanup_scheduled = False
+            return False
+        self.history_cleanup_scheduled = bool(self.sent_history_deadlines)
+        return self.history_cleanup_scheduled
+
+    def transfer_status_changed(self, ident, state):
+        if int(state) in (3, 4, 5) and not self.history_cleanup_scheduled:
+            self.history_cleanup_scheduled = True
+            GLib.timeout_add_seconds(5, self.clean_sent_history)
 
     @dbus.service.method(NAME, in_signature='s', out_signature='')
     def Cancel(self, ident):

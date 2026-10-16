@@ -1,0 +1,98 @@
+--- a/sfos-airdrop.pro
++++ b/sfos-airdrop.pro
+@@ -5,6 +5,3 @@
+ transfer.file = plugins/transfer/transfer.pro
+ check.file = tools/check/check.pro
+ 
+-SUBDIRS += quickshare-sharing quickshare-transfer
+-quickshare-sharing.file = plugins/quickshare-sharing/sharing.pro
+-quickshare-transfer.file = plugins/quickshare-transfer/transfer.pro
+--- a/rpm/sfos-airdrop.spec
++++ b/rpm/sfos-airdrop.spec
+@@ -1,10 +1,8 @@
+ Name: sfos-airdrop
+-%global __requires_exclude_from ^%{_datadir}/sfos-airdrop/quickshare/runtime/.*$
+-%global __provides_exclude_from ^%{_datadir}/sfos-airdrop/quickshare/runtime/.*$
+-Version: 0.3.0
++Version: 0.4.0
+ Release: 1
+-Summary: System Quick Share and experimental AirDrop integration for Sailfish OS
+-License: GPLv3+ and Apache-2.0 and GPLv2 with exceptions
++Summary: Experimental AirDrop integration for Sailfish OS
++License: GPLv3+
+ Group: Communications
+ URL: https://github.com/seemoo-lab/opendrop
+ Source0: %{name}-%{version}.tar.gz
+@@ -13,7 +11,6 @@
+ BuildRequires: pkgconfig(Qt5Qml)
+ BuildRequires: pkgconfig(nemotransferengine-qt5)
+ Requires: python3-base >= 3.8
+-Requires: glibc >= 2.34
+ Requires: python3-dbus
+ Requires: python3-gobject
+ Requires: openssl
+@@ -25,9 +22,8 @@
+ AirDrop sharing and transfer plugins, a session D-Bus service, and a settings
+ page for explicitly confirmed incoming files. Requires a separately configured
+ AWDL link (awdl0). Does not change the device Wi-Fi configuration.
+-Quick Share uses the existing local network and a bundled isolated Java runtime.
+-Native Android/Windows interoperability and Apple interoperability require
+-independent device validation; Quick Share LAN is separate from AirDrop.
++Quick Share is distributed separately as sfos-quickshare and can coexist with
++this package. Apple interoperability requires independent device validation.
+ 
+ %prep
+ %setup -q
+@@ -51,22 +47,6 @@
+ install -m644 qml/AirDropBus.qml %{buildroot}%{_datadir}/jolla-settings/pages/airdrop/
+ install -Dm644 qml/AirDropShare.qml %{buildroot}%{_datadir}/nemo-transferengine/plugins/sharing/AirDropShare.qml
+ install -m644 qml/AirDropBus.qml %{buildroot}%{_datadir}/nemo-transferengine/plugins/sharing/
+-install -Dm755 bin/sfos-quickshared %{buildroot}%{_bindir}/sfos-quickshared
+-install -Dm644 data/org.sailfishos.QuickShare.service %{buildroot}%{_datadir}/dbus-1/services/org.sailfishos.QuickShare.service
+-install -Dm644 data/sfos-quickshare.service %{buildroot}%{_userunitdir}/sfos-quickshare.service
+-install -Dm644 data/quickshare.json %{buildroot}%{_datadir}/jolla-settings/entries/quickshare.json
+-install -Dm644 qml/QuickShareSettings.qml %{buildroot}%{_datadir}/jolla-settings/pages/quickshare/QuickShareSettings.qml
+-install -m644 qml/QuickShareBus.qml %{buildroot}%{_datadir}/jolla-settings/pages/quickshare/
+-install -Dm644 qml/QuickShareShare.qml %{buildroot}%{_datadir}/nemo-transferengine/plugins/sharing/QuickShareShare.qml
+-install -m644 qml/QuickShareBus.qml %{buildroot}%{_datadir}/nemo-transferengine/plugins/sharing/
+-mkdir -p %{buildroot}%{_datadir}/sfos-airdrop/quickshare/runtime
+-install -m644 quickshare/*.py %{buildroot}%{_datadir}/sfos-airdrop/quickshare/
+-cp -r quickshare/lib quickshare/licenses %{buildroot}%{_datadir}/sfos-airdrop/quickshare/
+-cp -a quickshare/runtime-image/*/* %{buildroot}%{_datadir}/sfos-airdrop/quickshare/runtime/
+-install -m644 quickshare/runtime.lock.json quickshare/artifacts.lock.json quickshare/jvm/UPSTREAM.json %{buildroot}%{_datadir}/sfos-airdrop/quickshare/
+-find %{buildroot}%{_datadir}/sfos-airdrop/quickshare -type f -exec chmod 644 {} +
+-chmod 755 %{buildroot}%{_datadir}/sfos-airdrop/quickshare/runtime/bin/java
+-chmod 755 %{buildroot}%{_datadir}/sfos-airdrop/quickshare/runtime/lib/jspawnhelper
+ 
+ %post
+ if [ -x /usr/bin/update-desktop-database ]; then /usr/bin/update-desktop-database -q || :; fi
+@@ -74,12 +54,9 @@
+ %files
+ %license LICENSE
+ %{_bindir}/sfos-airdropd
+-%{_bindir}/sfos-quickshared
+ %{_libexecdir}/sfos-airdrop-check
+ %{_libdir}/nemo-transferengine/plugins/sharing/libairdropshareplugin.so
+ %{_libdir}/nemo-transferengine/plugins/transfer/libairdroptransferplugin.so
+-%{_libdir}/nemo-transferengine/plugins/sharing/libquickshareshareplugin.so
+-%{_libdir}/nemo-transferengine/plugins/transfer/libquicksharetransferplugin.so
+ %{_datadir}/sfos-airdrop
+ %{_datadir}/dbus-1/services/org.sailfishos.AirDrop.service
+ %{_userunitdir}/sfos-airdrop.service
+@@ -87,14 +64,10 @@
+ %{_datadir}/jolla-settings/pages/airdrop
+ %{_datadir}/nemo-transferengine/plugins/sharing/AirDropShare.qml
+ %{_datadir}/nemo-transferengine/plugins/sharing/AirDropBus.qml
+-%{_datadir}/dbus-1/services/org.sailfishos.QuickShare.service
+-%{_userunitdir}/sfos-quickshare.service
+-%{_datadir}/jolla-settings/entries/quickshare.json
+-%{_datadir}/jolla-settings/pages/quickshare
+-%{_datadir}/nemo-transferengine/plugins/sharing/QuickShareShare.qml
+-%{_datadir}/nemo-transferengine/plugins/sharing/QuickShareBus.qml
+ 
+ %changelog
++* Fri Oct 16 2026 Sailfish AirDrop contributors - 0.4.0-1
++- Remove bundled Quick Share files so the independent package can coexist.
+ * Wed Oct 14 2026 Sailfish sharing contributors - 0.3.0-1
+ - Add isolated Bada Quick Share LAN protocol core and native system integration.
+ * Tue Oct 13 2026 Sailfish AirDrop contributors - 0.2.0-1

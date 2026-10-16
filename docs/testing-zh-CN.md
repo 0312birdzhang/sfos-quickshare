@@ -1,7 +1,11 @@
-# SailfishOS Quick Share 0.1.4 测试包
+# SailfishOS Quick Share 0.1.5 测试包
 
-文件：`sfos-quickshare-0.1.4-1.aarch64.rpm`。
-这是独立 Quick Share LAN 测试包，包含所需协议核心和私有 Java 运行时。
+文件：
+
+- `sfos-quickshare-0.1.5-1.aarch64.rpm`：日常更新的服务、界面、翻译和系统分享插件。
+- `sfos-quickshare-runtime-1.0.0-1.aarch64.rpm`：首次安装的协议核心、私有 Java 运行时和 Python 依赖。
+
+这是独立 Quick Share LAN 测试包。依赖包独立版本管理，后续主包更新无需重复下载依赖。
 不用安装 AirDrop 包，也不用修改内核、Wi-Fi 驱动或系统 Java。
 
 ## 设备要求
@@ -13,12 +17,13 @@
 
 ## 安装
 
-把 RPM 放入 Downloads，用文件管理器打开并安装。
+把两个 RPM 放入 Downloads。首次安装或从旧版合并包升级时，必须在同一事务安装两个包。
+已经安装 runtime 1.0.0 的设备，日常只需安装新版主包。
 如果需要终端安装并自动处理依赖：
 
 ```sh
 devel-su
-pkcon install-local /home/defaultuser/Downloads/sfos-quickshare-0.1.4-1.aarch64.rpm
+pkcon install-local /home/defaultuser/Downloads/sfos-quickshare-runtime-1.0.0-1.aarch64.rpm /home/defaultuser/Downloads/sfos-quickshare-0.1.5-1.aarch64.rpm
 exit
 systemctl --user daemon-reload
 systemctl --user restart sfos-quickshare.service
@@ -26,15 +31,12 @@ systemctl --user restart sfos-quickshare.service
 
 升级前先等待当前传输完成；升级后重启服务使新代码生效。
 
-以前安装过混合包 `sfos-airdrop-0.3.0` 的用户，先停止服务并卸载旧包，
-再安装独立包（两包存在同名插件，不能共存）：
+无需安装 AirDrop 即可使用 Quick Share。两个独立包已无显式冲突，可与只含 AirDrop 的
+`sfos-airdrop-0.4.0-1.aarch64.rpm` 共存。旧混合包 `sfos-airdrop-0.3.0`
+仍拥有同名 Quick Share 文件，已有该包的设备应在同一事务把 AirDrop 升级到 0.4.0，
+并安装上述两个 Quick Share 包；仅去掉冲突声明不能解决旧包的文件重叠。
+Downloads 中收到的文件不会删除。
 
-```sh
-systemctl --user stop sfos-quickshare.service sfos-airdrop.service
-devel-su rpm -e sfos-airdrop
-```
-
-旧包中的 AirDrop 实验组件随之卸载；Downloads 中收到的文件不会删除。
 安装后重新打开系统设置和发起分享的应用。没有 Quick Share 入口时可注销后
 重新登录，使 Transfer Engine 重新加载插件。
 
@@ -53,6 +55,9 @@ devel-su rpm -e sfos-airdrop
 3. 选择 Quick Share，点击搜索并选择对端，核对 PIN 后由对端确认接收。
    搜索后在分享面板可见期间持续刷新；无新搜索结果超过 15 秒时清空旧列表。
    正常退出接收的对端通过 mDNS 离线通知移除，突然断网可能需要等待协议缓存过期。
+
+发送完成、失败或取消后，设置页记录在 60 秒后自动消失；系统 Quick Share 发送记录约一分钟后移除。
+不清理进行中的发送、接收记录或实际文件。
 
 设备名优先使用系统蓝牙名称，读取不到时使用 hostname；收发双方显示一致。
 修改名称后关闭再开启 Quick Share 接收，使新名称生效。
@@ -85,6 +90,8 @@ journalctl --user -u sfos-quickshare.service -b --no-pager > ~/Downloads/quicksh
 ```sh
 systemctl --user stop sfos-quickshare.service
 devel-su rpm -e sfos-quickshare
+# 如不再使用，也可单独卸载依赖包：
+# devel-su rpm -e sfos-quickshare-runtime
 systemctl --user daemon-reload
 ```
 
