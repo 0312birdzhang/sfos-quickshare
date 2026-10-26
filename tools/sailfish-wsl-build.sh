@@ -66,9 +66,8 @@ printf -v q_timeout '%q' "$build_timeout"
 
 echo "== [1/4] Sync source to $wsl_dist:$wsl_project =="
 wsl.exe -d "$wsl_dist" -- bash -lc "mkdir -p $q_build_root && rsync -a --delete \
-  --include='quickshare/runtime-image/***' \
   --exclude=.git --exclude=.gradle --exclude=RPMS --exclude=installroot --exclude=Makefile \
-  --exclude='quickshare/jvm/*/build' --exclude='quickshare/runtime' \
+  --exclude='native/build' \
   --exclude='*.o' --exclude='*.so' --exclude='moc_*.cpp' \
   --exclude='__pycache__' --exclude='*.pyc' \
   --exclude='qrc_*.cpp' --exclude='*.pro.user' \

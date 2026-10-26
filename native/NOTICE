@@ -1,0 +1,11 @@
+The native protocol core is a C++ port of behavior from Bada/LibreDrop:
+Copyright 2026 Bada contributors, Apache License 2.0.
+Pinned revision: 3232b5eb67a53c8a9b997b3641d41c36913b7cc8
+Repository: https://github.com/kyujin-cho/LibreDrop
+
+The UKEY2, SecureMessage and DeviceToDeviceMessage wire schemas are from
+Google LLC, copyright 2020, Apache License 2.0. The bounded wire codec follows
+the corresponding .proto definitions retained in native/proto.
+
+New C++ implementation and integration are GPL-3.0-or-later; see ../LICENSE.
+The Apache 2.0 license text is retained in LICENSE-APACHE-2.0.

@@ -6,16 +6,23 @@ import Sailfish.TransferEngine 1.0
 Column {
     id: root
     property var shareAction
-    property bool searchStarted: false
     width: parent.width
     spacing: Theme.paddingMedium
     SailfishTransfer { id: transfer }
     QuickShareBus { id: api }
     Component.onCompleted: transfer.loadConfiguration(shareAction.toConfiguration())
+    Image {
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Theme.iconSizeLarge
+        height: width
+        source: "file:///usr/share/sfos-quickshare/icons/quick-share-logo.png"
+        fillMode: Image.PreserveAspectFit
+    }
     Timer {
         interval: 5000; repeat: true
-        running: root.searchStarted && root.visible
-        onTriggered: if (api.status.ready && !api.status.discovering) api.invoke("Discover", [])
+        running: root.visible && api.status.ready && !api.status.discovering
+        triggeredOnStart: true
+        onTriggered: api.invoke("Discover", [])
     }
     Label {
         x: Theme.horizontalPageMargin
@@ -27,7 +34,7 @@ Column {
         anchors.horizontalCenter: parent.horizontalCenter
         text: api.status.discovering ? I18n.tr("Searching…") : I18n.tr("Search for devices")
         enabled: api.status.ready && !api.status.discovering
-        onClicked: { root.searchStarted = true; api.invoke("Discover", []) }
+        onClicked: api.invoke("Discover", [])
     }
     Repeater {
         model: api.status.peers

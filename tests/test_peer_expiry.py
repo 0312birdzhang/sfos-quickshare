@@ -3,6 +3,7 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
+import threading
 import types
 import unittest
 from unittest.mock import Mock, patch
@@ -52,8 +53,38 @@ class PeerExpiryTests(unittest.TestCase):
         with patch.object(self.module.time, 'monotonic', return_value=114.9):
             self.assertEqual(len(json.loads(self.service.GetStatus())['peers']), 1)
 
+    def test_successful_receive_clears_previous_connection_error(self):
+        self.service.error = 'Peer closed the connection'
+        proc = Mock(stdout=[json.dumps({'incoming': {'count': 1}, 'error': ''})],
+                    stderr=[])
+        proc.wait.return_value = 0
+        callbacks = []
+        finished = threading.Event()
+        def idle(callback, *args):
+            callbacks.append((callback, args))
+            if callback.__name__ == 'finish': finished.set()
+        with patch.object(self.module.subprocess, 'Popen', return_value=proc), \
+                patch.object(self.module.GLib, 'idle_add', side_effect=idle):
+            ident = self.service.launch('receive')
+            self.assertTrue(finished.wait(3))
+        for callback, args in callbacks: callback(*args)
+        self.assertEqual(self.service.error, '')
+        self.assertEqual(self.service.jobs[ident][0]['error'], '')
+
     def test_send_cannot_use_expired_device_without_status_poll(self):
         with patch.object(self.module.time, 'monotonic', return_value=700):
             with self.assertRaises(ValueError):
                 self.service.Send('unused', 'peer')
+        self.assertEqual(self.service.peers, {})
+
+    def test_new_discovery_keeps_fresh_cache_without_extending_its_lease(self):
+        self.service.launch = Mock()
+        with patch.object(self.module.time, 'monotonic', return_value=114):
+            self.service.Discover()
+            self.assertIn('peer', self.service.peers)
+            self.service.Discover()
+        self.service.launch.assert_called_once_with('discover')
+        self.assertEqual(self.service.peers_at, 100)
+        with patch.object(self.module.time, 'monotonic', return_value=115):
+            self.service.expire_peers()
         self.assertEqual(self.service.peers, {})

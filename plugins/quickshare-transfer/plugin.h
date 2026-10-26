@@ -10,7 +10,7 @@ class QuickShareTransfer : public MediaTransferInterface {
 public:
     QuickShareTransfer();
     QString displayName() const override { return QStringLiteral("Quick Share"); }
-    QUrl serviceIcon() const override { return QUrl("image://theme/icon-m-share"); }
+    QUrl serviceIcon() const override { return QUrl("file:///usr/share/sfos-quickshare/icons/quick-share-logo.png"); }
     bool cancelEnabled() const override { return true; }
     bool restartEnabled() const override { return false; }
 public slots:

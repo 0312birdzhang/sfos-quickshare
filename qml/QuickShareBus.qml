@@ -8,14 +8,17 @@ DBusInterface {
     service: "org.sailfishos.QuickShare"
     iface: "org.sailfishos.QuickShare"
     path: "/org/sailfishos/QuickShare"
-    property var status: ({ready: false, receiving: false, peers: [], pending: []})
+    property var status: emptyStatus()
     property string error: ""
+    function emptyStatus() {
+        return {ready: false, receiving: false, discovering: false, receivingSeconds: 0, peers: [], pending: [], jobs: []}
+    }
     function invoke(method, args) {
         call(method, args, function() { refresh() }, function(message) { root.error = I18n.tr("Request failed: %1", String(message)) })
     }
     function refresh() {
-        call("GetStatus", [], function(result) { status = JSON.parse(result); if (status.error) root.error = status.error },
-             function(message) { root.error = I18n.tr("Request failed: %1", String(message)) })
+        call("GetStatus", [], function(result) { status = JSON.parse(result); root.error = status.error || "" },
+             function(message) { root.status = root.emptyStatus(); root.error = I18n.tr("Request failed: %1", String(message)) })
     }
     Component.onCompleted: call("SetLanguage", [Qt.locale().name], function() { root.refresh() }, function() { root.refresh() })
     property Timer pollTimer: Timer { interval: 1000; repeat: true; running: true; onTriggered: root.refresh() }

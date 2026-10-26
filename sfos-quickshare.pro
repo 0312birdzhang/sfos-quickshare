@@ -1,6 +1,10 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 SUBDIRS = quickshare-sharing quickshare-transfer
+SUBDIRS += native-core
+native-core.file = native/native.pro
+SUBDIRS += native-transfer
+native-transfer.file = native/worker.pro
 SUBDIRS += i18n-check
 i18n-check.file = tools/i18n-check/check.pro
 quickshare-sharing.file = plugins/quickshare-sharing/sharing.pro

@@ -3,12 +3,25 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'vendor'))
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from quickshare import network
 from quickshare.network import advertisement, decode, encode, endpoint_name
 
 
 class DiscoveryWireTests(unittest.TestCase):
+    def test_empty_startup_snapshot_waits_for_resolution_but_does_not_keep_old_peers(self):
+        now = [0.0]
+        snapshots = []
+        def sleep(seconds): now[0] += seconds
+        with patch.object(network, 'address', return_value='192.0.2.10'), \
+             patch.object(network, 'Zeroconf', return_value=Mock()), \
+             patch.object(network, 'ServiceBrowser', return_value=Mock()), \
+             patch.object(network.time, 'monotonic', side_effect=lambda: now[0]), \
+             patch.object(network.time, 'sleep', side_effect=sleep):
+            network.discover('auto', lambda **data: snapshots.append((now[0], data['peers'])), duration=3)
+        self.assertGreaterEqual(snapshots[0][0], 2)
+        self.assertEqual(snapshots[-1][1], [])
+
     def test_goodbye_removes_peer_from_live_snapshots(self):
         info = advertisement('192.0.2.20', 34567,
             encode(bytes([0x24]) + bytes(16) + bytes([4]) + b'Peer').decode(), 'Ab12')

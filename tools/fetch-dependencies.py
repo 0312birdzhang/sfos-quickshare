@@ -1,4 +1,4 @@
-"""Fetch pinned Python modules and the ARM64 JRE; honor standard proxy env vars."""
+"""Fetch pinned Python modules for discovery; honor standard proxy env vars."""
 import hashlib
 import io
 import json
@@ -46,13 +46,6 @@ def main():
                     if not member.is_dir():
                         write(vendor, member.filename, archive.read(member))
         print('Verified', item['name'], item['version'])
-    runtime = json.loads((ROOT / 'quickshare/runtime.lock.json').read_text())
-    path = ROOT / 'quickshare/runtime' / runtime['file']
-    if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != runtime['sha256']:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        data = fetch(runtime['url'], runtime['sha256'])
-        path.write_bytes(data)
-    print('Verified ARM64 Java runtime', runtime['version'])
 
 if __name__ == '__main__':
     main()

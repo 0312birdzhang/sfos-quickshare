@@ -1,4 +1,4 @@
-"""Isolated native discovery + Bada JVM protocol worker."""
+"""Isolated discovery and native file-transfer worker; C++ protocol backend."""
 # SPDX-License-Identifier: GPL-3.0-or-later
 import json
 import os
@@ -18,27 +18,19 @@ def emit(**fields):
     print(json.dumps(fields), flush=True)
 
 
-def java_command():
-    java = Path(os.environ.get('SFOS_QUICKSHARE_JAVA', '/usr/lib64/sfos-quickshare/runtime/bin/java'))
-    library = Path(os.environ.get('SFOS_QUICKSHARE_LIB', str(ROOT / 'lib')))
-    if not java.is_file() or not library.is_dir():
+def protocol_command():
+    backend = os.environ.get('SFOS_QUICKSHARE_BACKEND', 'native')
+    if backend != 'native':
+        raise RuntimeError('Unsupported Quick Share backend: ' + backend)
+    native = Path(os.environ.get('SFOS_QUICKSHARE_NATIVE', '/usr/libexec/sfos-quickshare-native'))
+    if not native.is_file() or not os.access(native, os.X_OK):
         raise RuntimeError('Quick Share protocol runtime is not installed')
-    if not os.access(java, os.X_OK) or not (library / 'bridge.jar').is_file():
-        raise RuntimeError('Quick Share protocol runtime is incomplete')
-    if 'SFOS_QUICKSHARE_JAVA' not in os.environ:
-        for name in ('lib/libjli.so', 'lib/server/libjvm.so', 'lib/libnet.so', 'lib/libnio.so'):
-            if not (java.parent.parent / name).is_file():
-                raise RuntimeError('Quick Share Java runtime is missing ' + name)
-    return [str(java), '-Dfile.encoding=UTF-8', '-Xms16m', '-Xmx128m', '-XX:ActiveProcessorCount=2',
-            '-cp', str(library / '*'), 'org.sailfishos.quickshare.MainKt']
+    return [str(native)]
 
 
 def bridge(config, interface):
     env = dict(os.environ)
-    # Sailfish images may advertise zh_CN.utf8 without installing that locale.
-    # JDK 17 uses the native locale for filesystem paths independently of file.encoding.
-    env['LC_ALL'] = 'en_US.utf8'
-    process = subprocess.Popen(java_command(), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+    process = subprocess.Popen(protocol_command(), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, text=True, encoding='utf-8', bufsize=1, env=env)
     output_lock = threading.Lock()
     def command(data):
@@ -86,7 +78,7 @@ def bridge(config, interface):
                     api.Received(data['destination'], data['count'])
                 except Exception as error:
                     emit(error='Files saved; notification failed: ' + str(error))
-                emit(incoming=data)
+                emit(incoming=data, error='')
             else:
                 emit(**data)
         code = process.wait()

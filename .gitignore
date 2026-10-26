@@ -1,11 +1,6 @@
 /RPMS/
 /installroot/
 /vendor/
-/quickshare/lib/
-/quickshare/runtime/
-/quickshare/runtime-image/
-.gradle/
-.kotlin/
 **/build/
 __pycache__/
 *.pyc

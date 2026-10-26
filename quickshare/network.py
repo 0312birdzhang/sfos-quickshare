@@ -109,11 +109,18 @@ def discover(interface, emit, duration=60):
                 found.pop(name, None)
     browser = ServiceBrowser(zc, TYPE, Listener())
     try:
-        end = time.monotonic() + duration
+        started = time.monotonic()
+        end = started + duration
+        published = False
         while time.monotonic() < end:
             time.sleep(.5)
             with lock:
+                # Let the initial DNS resolution finish before replacing a
+                # still-valid service snapshot with an empty startup result.
+                if not published and not found and time.monotonic() - started < 2:
+                    continue
                 emit(peers=list(found.values()))
+                published = True
     finally:
         browser.cancel()
         zc.close()

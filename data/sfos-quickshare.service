@@ -9,3 +9,4 @@ Environment=PYTHONPATH=/usr/share/sfos-quickshare:/usr/share/sfos-quickshare/ven
 UMask=0077
 Restart=on-failure
 KillMode=control-group
+TimeoutStopSec=10

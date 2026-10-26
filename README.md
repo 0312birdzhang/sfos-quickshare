@@ -16,36 +16,42 @@ Finished, failed and canceled sends disappear from settings after one minute;
 the corresponding system upload records are removed after about one minute.
 Active transfers and received-file history are retained.
 
-Install both `sfos-quickshare` (service, UI, native plugins and translations) and
-`sfos-quickshare-runtime` (pinned Python dependencies, protocol JARs and private JRE).
-Runtime 1.0.0 is versioned independently; ordinary application updates reuse it.
+Install both `sfos-quickshare` (C++ protocol worker, service, UI and plugins) and
+`sfos-quickshare-runtime` 2.0.0 (pinned Python discovery dependencies only).
+The default backend needs no JVM. Upgrade both packages together when migrating
+from runtime 1.0.0; its old private JRE and JARs are removed by that upgrade.
+The JVM backend and its optional package have been removed as of 0.2.2.
 Upgrade an old all-in-one package and install the runtime in the same transaction.
 AirDrop is optional and separate. Its old mixed 0.3.0 RPM must first be upgraded
 to the AirDrop-only 0.4.0 package to avoid duplicate Quick Share files.
 The [compatibility packaging patch](docs/compatibility/README.md) preserves the
 AirDrop-only build changes for users of that old source tree.
 
+Since 0.1.6, RPM transactions stop and temporarily mask the user service while
+files change, then reload units and restore on-demand activation. Uninstall stops
+the service and its workers. Reopen hosted settings/sharing pages after an update
+to reload their QML; service outages clear cached UI state. Existing user masks
+are preserved.
+
 See [installation and testing instructions](docs/testing-zh-CN.md).
+
+The [C++ protocol worker](native/README.md) handles UKEY2, PIN verification,
+encrypted LAN file streaming, consent, cancellation and private atomic storage.
+Python retains discovery, D-Bus and Sailfish integration. Backend selection occurs
+before connecting; native failures never silently retry through another backend.
 
 ## Build
 
-Prerequisites: Python 3.10.12+ (including tarfile extraction filters), JDK 17,
-network access to the pinned dependencies and Gradle repositories, and a configured
+Prerequisites: Python 3, network access to the pinned Python dependencies, and a configured
 Sailfish SDK aarch64 build target. Downloads honor HTTP_PROXY / HTTPS_PROXY; no
 machine-specific proxy settings are included.
 
 ```sh
 python3 tools/fetch-dependencies.py
-cd quickshare/jvm
-sh gradlew :bridge:installDist :bridge:test :core-protocol:test
-cd ../..
-python3 tools/prepare-quickshare.py
 python3 tools/build-translations.py
 python3 -m unittest discover -s tests -v
 ```
 
-The preparation script verifies the runtime archive, extracts it and records built
-JAR hashes. Run these steps on Linux/WSL; the generated runtime contains Unix links.
 Use qmake/mb2 with `rpm/sfos-quickshare.spec` in the Sailfish SDK, or invoke the
 included helper from Windows Git Bash:
 
@@ -55,10 +61,10 @@ SDK_USER=pc tools/sailfish-wsl-build.sh /path/to/sfos-quickshare
 
 The helper stages sources in WSL and builds with mb2. SDK_USER, SDK_ROOT,
 SFOS_TARGET and other paths are configurable; see `--help`. RPMs go into `RPMS/`.
-Dependencies, runtime images, generated JARs and RPMs are not committed.
-The spec produces both RPMs. Increase the runtime version/release whenever its
-JARs (including the JSON bridge), Python vendor tree, JRE or manifests change;
-otherwise keep its version unchanged across application releases.
+Fetched Python dependencies, build outputs and RPMs are not committed.
+The spec produces the application and Python runtime RPMs only.
+Native code updates change the application package; only Python vendor dependency
+changes require a runtime version bump. No Java/Kotlin/Gradle tools are required.
 
 ## Translations
 
@@ -74,19 +80,21 @@ translated. Node.js is optional for additional Python/JavaScript parity tests.
 ## Source layout
 
 - `quickshare/`: Python D-Bus service, LAN discovery, worker and file-history integration.
-- `quickshare/jvm/`: pinned Bada/LibreDrop protocol core, its tests and our JSON bridge.
+- `native/`: C++11/OpenSSL protocol, LAN worker and safety/interoperability tests.
+- `native/proto/`, `native/UPSTREAM.json`: retained wire schemas and source provenance.
 - `plugins/`: native Sailfish sharing and transfer plugins.
 - `qml/`, `data/`, `bin/`: system settings, sharing UI and session-service integration.
 - `tests/`, `tools/`, `rpm/`: regression tests and repeatable packaging.
 
 ## Validation and limits
 
-The independent package passed device installation, D-Bus activation, native plugin
-and QML checks, bidirectional transfers with a controlled Linux peer, PIN checks,
-file hashes and per-file history. Windows official Quick Share reception was
-previously confirmed by a user in the combined prototype. Stock Android clients
-and the reverse Windows direction still need tester verification. Automated checks
-do not cover visible UI interaction. This is a test release, not store certification.
+The native worker passed bidirectional file transfers against the independent
+pinned JVM implementation, including an ARM64 Sailfish receiver, matching PINs,
+Unicode/empty/multiple files, SHA256 checks and rejection. Native TCP tests cover
+interruption, cancellation and destination safety. See [validation](native/VALIDATION.md).
+The user confirmed official Windows/native bidirectional transfers and the 0.2.1
+receive-error fix. Stock Android interoperability still needs testing. Automated tests do not cover
+visible UI interaction. This is a test release, not store certification.
 
 Old `sfos-airdrop` mixed packages below 0.4.0 conflict with this package because
 they own the same Quick Share plugin/service names; uninstall them before migration.
@@ -96,7 +104,6 @@ No WLAN kernel modules or driver changes are included.
 
 Integration code is GPL-3.0-or-later; see [LICENSE](LICENSE) and per-file notices.
 The Bada/LibreDrop protocol modules retain their Apache-2.0 notices and pinned
-revision in [UPSTREAM.json](quickshare/jvm/UPSTREAM.json). Python dependencies retain
-their own licenses when fetched. The bundled-in-RPM Eclipse Temurin runtime is
-GPLv2 with Classpath Exception; its archive hash and origin are pinned separately.
+revision in [UPSTREAM.json](native/UPSTREAM.json). Python dependencies retain
+their own licenses when fetched. No Java runtime is bundled.
 No Google APK, Apple binary, credentials or device captures are included.

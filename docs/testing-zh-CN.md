@@ -1,9 +1,13 @@
-# SailfishOS Quick Share 0.1.5 测试包
+# SailfishOS Quick Share 0.2.2 测试包
+
+> 0.2.2 默认使用 C++/OpenSSL 收发文件。从 runtime 1.0.0 升级时，需同时安装
+> 主包与 runtime 2.0.0；后者只包含 Python 发现依赖，升级会移除旧 JRE/JAR。
+> JVM 后端已彻底删除；构建和运行均无需 Java/Kotlin/Gradle。
 
 文件：
 
-- `sfos-quickshare-0.1.5-1.aarch64.rpm`：日常更新的服务、界面、翻译和系统分享插件。
-- `sfos-quickshare-runtime-1.0.0-1.aarch64.rpm`：首次安装的协议核心、私有 Java 运行时和 Python 依赖。
+- `sfos-quickshare-0.2.2-1.aarch64.rpm`：日常更新的服务、界面、翻译和系统分享插件。
+- `sfos-quickshare-runtime-2.0.0-1.aarch64.rpm`：Python 发现依赖，不包含 JVM。
 
 这是独立 Quick Share LAN 测试包。依赖包独立版本管理，后续主包更新无需重复下载依赖。
 不用安装 AirDrop 包，也不用修改内核、Wi-Fi 驱动或系统 Java。
@@ -18,18 +22,18 @@
 ## 安装
 
 把两个 RPM 放入 Downloads。首次安装或从旧版合并包升级时，必须在同一事务安装两个包。
-已经安装 runtime 1.0.0 的设备，日常只需安装新版主包。
+已安装 runtime 1.0.0 的设备需要在同一事务升级至 2.0.0，之后日常只需更新主包。
 如果需要终端安装并自动处理依赖：
 
 ```sh
 devel-su
-pkcon install-local /home/defaultuser/Downloads/sfos-quickshare-runtime-1.0.0-1.aarch64.rpm /home/defaultuser/Downloads/sfos-quickshare-0.1.5-1.aarch64.rpm
+pkcon install-local /home/defaultuser/Downloads/sfos-quickshare-runtime-2.0.0-1.aarch64.rpm /home/defaultuser/Downloads/sfos-quickshare-0.2.2-1.aarch64.rpm
 exit
-systemctl --user daemon-reload
-systemctl --user restart sfos-quickshare.service
 ```
 
-升级前先等待当前传输完成；升级后重启服务使新代码生效。
+升级前先等待当前传输完成。0.1.6 起安装/升级和卸载会自动停止 Quick Share 服务及子进程，
+安装结束后恢复按需启动；无需手动重启服务。旧版遗留进程会在安装新版时停止。
+安装后关闭并重新打开设置页及分享面板，让宿主应用重新加载 QML 和翻译。
 
 无需安装 AirDrop 即可使用 Quick Share。两个独立包已无显式冲突，可与只含 AirDrop 的
 `sfos-airdrop-0.4.0-1.aarch64.rpm` 共存。旧混合包 `sfos-airdrop-0.3.0`
@@ -52,8 +56,9 @@ Downloads 中收到的文件不会删除。
 
 1. 在另一台设备打开 Quick Share 接收/可见模式。
 2. 在 SailfishOS 文件管理器或图库选择一个文件，打开系统分享菜单。
-3. 选择 Quick Share，点击搜索并选择对端，核对 PIN 后由对端确认接收。
-   搜索后在分享面板可见期间持续刷新；无新搜索结果超过 15 秒时清空旧列表。
+3. 选择 Quick Share，自动搜索并选择对端，核对 PIN 后由对端确认接收。
+   每次打开分享面板都会自动搜索；仍有效的缓存先显示，后台刷新。
+   面板可见时持续刷新；无新搜索结果超过 15 秒时清空旧列表。
    正常退出接收的对端通过 mDNS 离线通知移除，突然断网可能需要等待协议缓存过期。
 
 发送完成、失败或取消后，设置页记录在 60 秒后自动消失；系统 Quick Share 发送记录约一分钟后移除。
@@ -70,7 +75,7 @@ Downloads 中收到的文件不会删除。
 - 支持英文、简体中文、繁体中文、德语、法语和俄语，其他语言回退英文。
 - 跟随系统语言；切换后重新打开设置或分享页，通知语言随页面同步。
 - 底层协议的未知诊断保留原文，文件名和设备名不翻译。
-- Windows 官方 Quick Share → SailfishOS 曾由用户确认成功。
+- Windows 官方 Quick Share 与 C++ 后端双向收发及 0.2.1 接收误报修复已由用户确认通过。
 - 原生 Android、Windows 反向发送仍需要测试者验证；受控 Linux 对端测试
   与官方客户端互通测试应分别报告，不能相互替代。
 

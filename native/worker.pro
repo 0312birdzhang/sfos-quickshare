@@ -1,0 +1,12 @@
+TEMPLATE = app
+TARGET = sfos-quickshare-native
+CONFIG += console c++11 link_pkgconfig thread
+CONFIG -= qt app_bundle
+PKGCONFIG += openssl
+DEFINES += OPENSSL_SUPPRESS_DEPRECATED
+INCLUDEPATH += include
+HEADERS += include/quickshare/core.h include/quickshare/json.h
+SOURCES += src/core.cpp src/json.cpp src/worker.cpp
+LIBS += -lpthread
+target.path = /usr/libexec
+INSTALLS += target

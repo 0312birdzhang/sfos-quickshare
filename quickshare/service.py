@@ -45,10 +45,10 @@ class Service(dbus.service.Object):
 
     def check(self):
         from .network import address
-        from .worker import java_command
+        from .worker import protocol_command
         try:
             address(self.interface)
-            java_command()
+            protocol_command()
         except Exception as error:
             raise dbus.exceptions.DBusException(error_text(error), name=NAME + '.LinkUnavailable')
 
@@ -73,6 +73,7 @@ class Service(dbus.service.Object):
             if data.get('pin') and data['pin'] != job.get('pin'):
                 self.notify(_('Quick Share sending PIN'), _('%1: ask the recipient to verify this PIN and accept.', data['pin']))
             job.update(data)
+            if mode == 'receive' and data.get('incoming'): self.error = ''
             if data.get('error') and mode != 'send': self.error = data['error']
             return False
         def drain():
@@ -142,7 +143,7 @@ class Service(dbus.service.Object):
         self.check()
         if not self.discovering:
             self.error = ''
-            self.peers = {}
+            self.expire_peers()
             self.discovering = True
             try: self.launch('discover')
             except Exception:
